@@ -8,7 +8,7 @@
 
 
 
-//functions
+//function prototypes
 void uart_init(void); //initiating usart communication, setting the correct bits
 void pwm_init(void); //initiating PWM-timer
 static int uart_putchar(char c, FILE *stream); //the putchar function, sends data
@@ -20,8 +20,7 @@ static FILE mystdout = FDEV_SETUP_STREAM(uart_putchar, NULL, _FDEV_SETUP_WRITE);
 volatile uint16_t ReceivedByte; 
 
 int main(void){
-//setting all PORTB to output
-DDRB = 0b11111111;
+
 
 //initiating uart and pwm
 uart_init();
@@ -31,11 +30,7 @@ pwm_init();
 
 //forever-running loop
 while(1){
-	OCR1A = ICR1 * ReceivedByte/20;
-
-
-}
-
+	OCR1A = (ICR1*ReceivedByte/20);
 
 
 
@@ -43,6 +38,14 @@ while(1){
 
 
 
+
+
+
+
+}
+//end of main
+
+//ISR and functions
 
 ISR(USART_RX_vect){
 
@@ -77,16 +80,17 @@ void pwm_init(void){
 
 
 	TCCR1A |= (1<<WGM13) | (1<<WGM12) | (1<<WGM11);
-	TCCR1B |= (1<<CS11) | (1<<CS10);
+	TCCR1B |= (1<<CS11);
 	
-	TCCR1A |= (1<<COM1A1) | (1<<COM1B1);
+	TCCR1A |= (1<<COM1A1);
 
 
 
-	//TOP = 16,000,000/(64*50)-1 = 4,999
+	//TOP = 16,000,000/(8*50)-1 = 39999
 	ICR1 = 39999;
 
-	
+	//setting all PORTB to output
+	DDRB = 0b11111111;
 
 }
 
