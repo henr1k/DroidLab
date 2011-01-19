@@ -19,6 +19,11 @@ static FILE mystdout = FDEV_SETUP_STREAM(uart_putchar, NULL, _FDEV_SETUP_WRITE);
 //variables
 volatile uint16_t ReceivedByte; 
 
+
+
+
+
+
 int main(void){
 
 
@@ -30,20 +35,27 @@ pwm_init();
 
 //forever-running loop
 while(1){
-	OCR1A = (ICR1*ReceivedByte/20);
+	OCR1A = ICR1*1.5/20;
+	
+
+
 
 
 
 }
-
-
-
-
-
-
 
 }
 //end of main
+
+
+
+
+
+
+
+
+
+
 
 //ISR and functions
 
@@ -51,8 +63,7 @@ ISR(USART_RX_vect){
 
    
    ReceivedByte = UDR; // Fetch the recieved byte value into the variable "ByteReceived" 
-   UDR = ReceivedByte; // Echo back the received byte back to the computer 
-
+    
 }
 
 
@@ -78,14 +89,13 @@ void uart_init(void){
 
 void pwm_init(void){
 
-
-	TCCR1A |= (1<<WGM13) | (1<<WGM12) | (1<<WGM11);
-	TCCR1B |= (1<<CS11);
 	
+	TCCR1B |= (1<<WGM13) | (1<<WGM12);
+	TCCR1A |= (1<<WGM11);
+	
+	TCCR1B |= (1<<CS11);
 	TCCR1A |= (1<<COM1A1);
-
-
-
+	
 	//TOP = 16,000,000/(8*50)-1 = 39999
 	ICR1 = 39999;
 
