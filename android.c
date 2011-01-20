@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
@@ -18,7 +19,7 @@ static FILE mystdout = FDEV_SETUP_STREAM(uart_putchar, NULL, _FDEV_SETUP_WRITE);
 
 //variables
 volatile uint16_t ReceivedByte; 
-
+volatile uint16_t ReceivedInt;
 
 
 
@@ -26,7 +27,9 @@ volatile uint16_t ReceivedByte;
 
 int main(void){
 
+  
 
+  
 //initiating uart and pwm
 uart_init();
 pwm_init();
@@ -35,9 +38,10 @@ pwm_init();
 
 //forever-running loop
 while(1){
-	OCR1A = ICR1*1.5/20;
-	
 
+
+	OCR1A = 900 + ReceivedByte*5;
+	OCR1B = 900 + ReceivedByte*5;
 
 
 
@@ -63,7 +67,7 @@ ISR(USART_RX_vect){
 
    
    ReceivedByte = UDR; // Fetch the recieved byte value into the variable "ByteReceived" 
-    
+   UDR = ReceivedByte;
 }
 
 
@@ -89,15 +93,14 @@ void uart_init(void){
 
 void pwm_init(void){
 
-	
-	TCCR1B |= (1<<WGM13) | (1<<WGM12);
-	TCCR1A |= (1<<WGM11);
+	ICR1 = 20000;
+	TCCR1B |= (1<<WGM13);
 	
 	TCCR1B |= (1<<CS11);
-	TCCR1A |= (1<<COM1A1);
+	TCCR1A |= (1<<COM1A1) | (1<<COM1B1); 
 	
 	//TOP = 16,000,000/(8*50)-1 = 39999
-	ICR1 = 39999;
+	
 
 	//setting all PORTB to output
 	DDRB = 0b11111111;
