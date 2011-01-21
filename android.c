@@ -6,8 +6,7 @@
 #define FOSC 16000000
 #define BAUD 9600
 #define MYUBRR FOSC/16/BAUD-1
-
-
+#define BUFFER_SIZE 7
 
 //function prototypes
 void uart_init(void); //initiating usart communication, setting the correct bits
@@ -18,9 +17,8 @@ uint8_t uart_getchar(void); //getchar function, collects data
 static FILE mystdout = FDEV_SETUP_STREAM(uart_putchar, NULL, _FDEV_SETUP_WRITE);
 
 //variables
-volatile uint16_t ReceivedByte; 
-volatile uint16_t ReceivedInt;
-
+volatile char buff[BUFFER_SIZE];
+volatile int indx, flag;
 
 
 
@@ -40,10 +38,17 @@ pwm_init();
 while(1){
 
 
-	OCR1A = 900 + ReceivedByte*5;
-	OCR1B = 900 + ReceivedByte*5;
-
-
+	if(flag==1){
+	
+	for(uint8_t j=0;j<BUFFER_SIZE;j++)
+		printf("%c", buff[j]);
+	
+	flag = 0;
+	//indx = 0;
+	}
+	
+	
+	
 
 
 }
@@ -64,10 +69,13 @@ while(1){
 //ISR and functions
 
 ISR(USART_RX_vect){
-
-   
-   ReceivedByte = UDR; // Fetch the recieved byte value into the variable "ByteReceived" 
-   UDR = ReceivedByte;
+	
+	
+	buff[indx++] = UDR;
+	if(indx>= BUFFER_SIZE){
+	flag = 1;
+	indx = 0;
+	}
 }
 
 
