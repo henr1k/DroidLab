@@ -6,14 +6,13 @@
 #define FOSC 16000000
 #define BAUD 9600
 #define MYUBRR FOSC/16/BAUD-1
-#define BUFFER_SIZE 7
+#define BUFFER_SIZE 8
 
 //function prototypes
 void uart_init(void); //initiating usart communication, setting the correct bits
 void pwm_init(void); //initiating PWM-timer
 static int uart_putchar(char c, FILE *stream); //the putchar function, sends data
-uint8_t uart_getchar(void); //getchar function, collects data
-
+void servo_parse(void);
 static FILE mystdout = FDEV_SETUP_STREAM(uart_putchar, NULL, _FDEV_SETUP_WRITE);
 
 //variables
@@ -37,7 +36,7 @@ pwm_init();
 //forever-running loop
 while(1){
 
-
+	/*
 	if(flag==1){
 	
 	for(uint8_t j=0;j<BUFFER_SIZE;j++)
@@ -46,8 +45,10 @@ while(1){
 	flag = 0;
 	//indx = 0;
 	}
+	*/	
 	
-	
+	if(flag==1)
+	servo_parse();
 	
 
 
@@ -71,10 +72,10 @@ while(1){
 ISR(USART_RX_vect){
 	
 	
-	buff[indx++] = UDR;
-	if(indx>= BUFFER_SIZE){
-	flag = 1;
-	indx = 0;
+	buff[indx++] = UDR; //filling buffer, one byte at a time.
+	if(indx>= BUFFER_SIZE){ //when buffer is filled (index bigger or equal to buffer size defined in header)
+	flag = 1;				//sett finish flag to 1 to allow reading of datastring, and reset indx to start over
+	indx = 0;				//for new transfer
 	}
 }
 
@@ -115,6 +116,43 @@ void pwm_init(void){
 
 }
 
+void servo_parse(void){
+	uint8_t k = 0;
+	uint8_t xDeg, yDeg = 0;
+	char xServ[3], yServ[3];
+	
+	
+		
+		k = 0;
+		cli();
+		while(buff[k] != '$'){
+			xServ[k] = buff[k];
+			k++;
+		}
+		//printf("%d", k);
+		k=0;
+		//skip $
+		
+		while(buff[k+4] != '#'){
+			yServ[k] = buff[k+4];
+			k++;
+			//printf("%d", k);
+		}
+		sei();
+	
+	xDeg = atoi(xServ);
+	yDeg = atoi(yServ);
+	OCR1A = 900 + xDeg*5;
+	OCR1B = 900 + yDeg*5;
+	 
+
+	
+	flag = 0;
+	
+	
+	
+	
+}
 
 int uart_putchar(char c, FILE *stream)
 {
@@ -126,10 +164,5 @@ int uart_putchar(char c, FILE *stream)
     return 0;
 }
 
-uint8_t uart_getchar(void)
-{
-    while( !(UCSRA & (1<<RXC)) );
-    return(UDR);
-}
 
 
