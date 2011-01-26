@@ -63,7 +63,7 @@ while(1){
 ISR(USART_RX_vect){
 	
 	
-	buff[indx++] = UDR; //filling buffer, one byte at a time.
+	buff[indx++] = UDR0; //filling buffer, one byte at a time.
 	if(indx>= BUFFER_SIZE){ //when buffer is filled (index bigger or equal to buffer size defined in header)
 	flag = 1;				//set finish flag to 1 to allow reading of datastring, and reset indx to start over
 	indx = 0;				//for new transfer
@@ -73,16 +73,16 @@ ISR(USART_RX_vect){
 
 void uart_init(void){
 
-	UCSRB |= (1<<RXEN); //enable rx (recieve)
-	UCSRB |= (1<<TXEN); //enable tx (transmit)
+	UCSR0B |= (1<<RXEN0); //enable rx (recieve)
+	UCSR0B |= (1<<TXEN0); //enable tx (transmit)
 
-	UCSRC |= (1<<UCSZ1); //enables 8bit-transfer
-	UCSRC |= (1<<UCSZ0);
+	UCSR0C |= (1<<UCSZ01); //enables 8bit-transfer
+	UCSR0C |= (1<<UCSZ00);
 
-	UBRRL = MYUBRR; //loads the baud_prescale-value for 9600 baud
-	UBRRH = (MYUBRR >> 8);
+	UBRR0L = MYUBRR; //loads the baud_prescale-value for 9600 baud
+	UBRR0H = (MYUBRR >> 8);
 
-	UCSRB |= (1<<RXCIE); //enable the 
+	UCSR0B |= (1<<RXCIE0); //enable the 
 
 	sei();
 
@@ -148,8 +148,8 @@ int uart_putchar(char c, FILE *stream)
 {
     if (c == '\n') uart_putchar('\r', stream);
   
-    loop_until_bit_is_set(UCSRA, UDRE);
-    UDR = c;
+    loop_until_bit_is_set(UCSR0A, UDRE0);
+    UDR0 = c;
     
     return 0;
 }
