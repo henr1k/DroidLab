@@ -40,7 +40,7 @@
 
 
 # MCU name
-MCU = attiny2313
+MCU = atmega168
 
 
 # Processor frequency.
@@ -48,7 +48,7 @@ MCU = attiny2313
 #     processor frequency. You can then use this symbol in your source code to 
 #     calculate timings. Do NOT tack on a 'UL' at the end, this will be done
 #     automatically to create a 32-bit value in your source code.
-F_CPU = 16000000
+F_CPU = 1000000
 
 
 # Output format. (can be srec, ihex, binary)
@@ -204,7 +204,7 @@ AVRDUDE_PROGRAMMER = avrispmkii
 AVRDUDE_PORT = usb
 #AVRDUDE_PORT = COM1
 
-AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex -U lfuse:w:0xef:m -U hfuse:w:0xdf:m -U efuse:w:0xff:m
+AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex  -U lfuse:w:0xe6:m -U hfuse:w:0xdf:m
 
  
 

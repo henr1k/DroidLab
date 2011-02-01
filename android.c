@@ -3,7 +3,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
-#define FOSC 16000000
+#define FOSC 10000000
 #define BAUD 9600
 #define MYUBRR FOSC/16/BAUD-1
 #define BUFFER_SIZE 8
@@ -110,10 +110,12 @@ void pwm_init(void){
 void servo_parse(void){
 	uint8_t k = 0;
 	uint8_t xDeg, yDeg = 0;
-	char xVal[3], yVal[3];
+	char xVal[4], yVal[4];
 		if(flag==1){ // if new data is available, proceed. 
 		k = 0; 
 		cli(); //disable uart-interrupt, dont want to be interrupted with new data when parsing
+		
+		
 		while(buff[k] != '$'){ //parse through the data until we see the first separator
 			xVal[k] = buff[k];
 			k++;
@@ -130,6 +132,8 @@ void servo_parse(void){
 	
 	xDeg = atoi(xVal); 
 	yDeg = atoi(yVal);
+	printf("%d - %d", xDeg, yDeg);
+	
 	OCR1A = 900 + xDeg*5;
 	OCR1B = 900 + yDeg*5;
 	 
