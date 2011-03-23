@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <util/delay.h>
 
 #define FOSC 10000000
 #define BAUD 9600
@@ -13,18 +14,18 @@ void uart_init(void); //initiating usart communication, setting the correct bits
 void pwm_init(void); //initiating PWM-timer
 static int uart_putchar(char c, FILE *stream); //the putchar function, sends data
 void servo_parse(void);
-void endgame_check(void);
+void pin_irq_enable(void);
 static FILE mystdout = FDEV_SETUP_STREAM(uart_putchar, NULL, _FDEV_SETUP_WRITE);
 
 //variables
 volatile char buff[BUFFER_SIZE];
-volatile char ReceivedByte;
+//volatile char ReceivedByte;
 volatile int indx, flag;
 
 
 
-
 int main(void){
+	_delay_ms(500);
 
   
 
@@ -32,7 +33,7 @@ int main(void){
 //initiating uart and pwm
 uart_init();
 pwm_init();
-
+pin_irq_enable();
 
 
 //forever-running loop
@@ -42,16 +43,18 @@ while(1){
 	servo_parse(); //servo-parsing function
 	
 	
-	
 
-
-}
+} 
 
 }
 //end of main
 
+
+
+
 //ISR and functions
 ISR(USART_RX_vect){
+	
 	
 	
 	if(buff[0] != '%') //check start char, if not equal, reset for another try
@@ -63,7 +66,11 @@ ISR(USART_RX_vect){
 		flag = 1;				//set finish flag to 1 to allow reading of datastring, and reset indx to start over
 		indx = 0;				//for new transfer
 	}
-		
+	
+}
+
+ISR(INT0_vect){
+	printf("0xFF");
 }
 
 
@@ -78,11 +85,11 @@ void uart_init(void){
 	UBRR0L = MYUBRR; //loads the baud_prescale-value for 9600 baud
 	UBRR0H = (MYUBRR >> 8);
 
-	UCSR0B |= (1<<RXCIE0); //enable the 
+	UCSR0B |= (1<<RXCIE0); //enable the usart recieve interrupt
 
 	sei();
 
-	DDRD = 0b11111110; //setting RXD to input, all others output
+	DDRD = 0b00111110; //setting RXD to input, all others output
 	stdout = &mystdout; //setting printf init
 
 }
@@ -131,26 +138,35 @@ void servo_parse(void){
 		}
 		
 	
-	
-	
-	
 		xDeg = atoi(xVal); 
 		yDeg = atoi(yVal);
-		//printf("%d - %d", xDeg, yDeg);// for debug purposes
+		//printf("%c - %c", xDeg, yDeg); // for debug purposes
 		
-		OCR1A = 750 + xDeg*2;
-		OCR1B = 750 + yDeg*2;
-		sei(); //enable interrupt, ready for new data 
-		}
-		
+		OCR1A = 625 + xDeg*3;
+		OCR1B = 625 + yDeg*3;
 	
 		flag = 0; //set flag to false, ready to read new data
-		
+		}
 	
+		
+		sei(); //enable interrupt, ready for new data 
 	
 	
 }
 
+void pin_irq_enable(void){
+	
+	//enable pullup
+	PORTD |= (1<<7) | (1<<6);
+	
+	//enable interrupt on PD6 and PD7
+	PCMSK1 |= (1<<4) | (1<<5);
+	
+	//enable interrupt on falling edge
+	EICRA |= (1<<ISC01);
+	//turn on interrupts
+	EIMSK |= (1<<INT0);
+}
 
 
 int uart_putchar(char c, FILE *stream){
